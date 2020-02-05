@@ -76,11 +76,7 @@ def find_abbreviation(
             starting_index = i
             break
 
-    return 
-
-
-
-_candidate, long_form_candidate[starting_index:]
+    return short_form_candidate, long_form_candidate[starting_index:]
 
 
 def filter_matches(
