@@ -76,7 +76,11 @@ def find_abbreviation(
             starting_index = i
             break
 
-    return short_form_candidate, long_form_candidate[starting_index:]
+    return 
+
+
+
+_candidate, long_form_candidate[starting_index:]
 
 
 def filter_matches(
@@ -96,6 +100,8 @@ def filter_matches(
             # Long form is inside the parens.
             # Take one word before.
             short_form_candidate = doc[start - 2 : start - 1]
+            if short_form_candidate[0].pos_ is 'SPACE':
+                short_form_candidate = doc[start - 3 : start - 2]
             if short_form_filter(short_form_candidate):
                 candidates.append((doc[start:end], short_form_candidate))
         else:
