@@ -143,7 +143,13 @@ class AbbreviationDetector:
         self.matcher.add(
             "parenthesis", None, [{"ORTH": "("}, {"OP": "+"}, {"ORTH": ")"}]
         )
+        abbreviation_regex = r'(([A-Z0-9-]+){2,})|(([A-Z0-9-]\.){2,})'
+        acronym_rule = [{'TAG': 'NNP', 'TEXT': {'REGEX': abbreviation_regex}}]
+        self.matcher.add(
+            "only_abbreviation", None, acronym_rule
+        )
         self.global_matcher = Matcher(nlp.vocab)
+        self.nlp = nlp
 
     def find(self, span: Span, doc: Doc) -> Tuple[Span, Set[Span]]:
         """
@@ -162,14 +168,23 @@ class AbbreviationDetector:
 
     def __call__(self, doc: Doc) -> Doc:
         matches = self.matcher(doc)
-        matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches]
+        matches_all_shorts = [x for x in matches if self.nlp.vocab.strings[x[0]] == 'only_abbreviation']
+        matches_no_brackets = [(x[0], x[1] + 1, x[2] - 1) for x in matches if self.nlp.vocab.strings[x[0]] == 'parenthesis']
+        all_shorts = []
+        [all_shorts.append(doc[m[1]:m[2]]) for m in matches_all_shorts]
         filtered = filter_matches(matches_no_brackets, doc)
         occurences = self.find_matches_for(filtered, doc)
 
+        # Modify here to detect all abbreviations w or w/o definition        
         for (long_form, short_forms) in occurences:
             for short in short_forms:
                 short._.long_form = long_form
                 doc._.abbreviations.append(short)
+        
+        for short in all_shorts:
+            if short not in doc._.abbreviations:
+                doc._.abbreviations.append(short)
+
         return doc
 
     def find_matches_for(
